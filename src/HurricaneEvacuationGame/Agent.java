@@ -2,15 +2,23 @@ package HurricaneEvacuationGame;
 
 abstract class Agent {
 
-    int agentNum;
+    private int agentNum;
+    private Agent opponent;
     Vertex location;
     private int carrying = 0;
     private int numOfMoves = 0;
     private int saved = 0;
     private int numOfExpansions = -1;
 
+    public Agent(int agentNum) {
+        this.agentNum = agentNum;
+    }
 
     abstract Move makeOperation();
+
+    void setOpponent(Agent opponent) {
+        this.opponent = opponent;
+    }
 
     void setLocation(Vertex location) {
         this.location = location;
@@ -32,6 +40,10 @@ abstract class Agent {
 
     int getAgentNum() {
         return agentNum;
+    }
+
+    Agent getOpponent() {
+        return opponent;
     }
 
     Vertex getLocation() {

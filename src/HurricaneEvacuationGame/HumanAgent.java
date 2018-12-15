@@ -5,8 +5,7 @@ import java.util.InputMismatchException;
 class HumanAgent extends Agent {
 
     HumanAgent(int agentNum) {
-
-        this.agentNum = agentNum;
+        super(agentNum);
     }
 
     @Override

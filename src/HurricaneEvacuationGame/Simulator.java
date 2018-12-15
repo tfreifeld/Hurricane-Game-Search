@@ -5,13 +5,15 @@ import java.util.*;
 
 public class Simulator {
 
-    private static ArrayList<Agent> agents = new ArrayList<>(2);
+    private static List<Agent> agents;
     private static Graph graph;
     private static int deadline;
     private static double time = 0;
     private static int safeCount = 0;
     private static int totalPeople = 0;
     private static float kFactor;
+    private static int cutoffLimit = 0;
+    private static HashMap<Integer, Integer> peopleMap = new HashMap<>();
 
     static Scanner sc = new Scanner(System.in);
 
@@ -43,7 +45,7 @@ public class Simulator {
 
         System.out.println("Performance measure:");
         for (Agent agent : agents) {
-            System.out.println("Agent " + agent.agentNum + ":");
+            System.out.println("Agent " + agent.getAgentNum() + ":");
             agent.performanceMeasure();
 
         }
@@ -65,13 +67,14 @@ public class Simulator {
             time++;
         } else {
             double tempTime =
-                    time + move.getEdge().getWeight() * (1 + kFactor * move.getAgent().getCarrying());
+                    time + computeTraverseTime(move.getAgent().getCarrying(), move.getEdge().getWeight());
             if (!(tempTime > getDeadline())) {
                 /*If deadline isn't breached*/
                 System.out.println("traverse - " + move.getAgent().getLocation().getId()
                         + " to " + move.getTarget().getId());
                 move.getAgent().traverse(move.getTarget());
                 time = tempTime;
+                peopleMap.replace(move.getTarget().getId(), 0);
             } else {
                 System.out.println("traverse failed - will breach deadline");
                 /*If deadline is breached, traverse fails*/
@@ -85,7 +88,6 @@ public class Simulator {
 
     private static void readInputFromUser() {
 
-
         System.out.println
                 ("Please enter the type of agents.\n" +
                         "Type 'h' for human or 'g' for game search:");
@@ -94,6 +96,8 @@ public class Simulator {
             System.out.println("Invalid option.");
             agentType = sc.next();
         }
+
+        ArrayList<Agent> agents = new ArrayList<>(2);
 
         switch (agentType) {
 
@@ -109,15 +113,36 @@ public class Simulator {
                         "'s' for a semi-cooperative game or 'f'" +
                         " for a fully cooperative game:");
                 String gameType = sc.next();
-                while (!gameType.matches("[h|g]")) {
+                while (!gameType.matches("[a|s|f]")) {
                     System.out.println("Invalid option.");
                     gameType = sc.next();
                 }
+
+                System.out.println("Please choose a cutoff limit for the tree:");
+                while (true) {
+                    try {
+                        cutoffLimit = sc.nextInt();
+                        if (cutoffLimit <= 0) {
+                            System.out.println("cutoff limit must be positive.");
+                            continue;
+                        }
+                        break;
+                    } catch (InputMismatchException e) {
+                        sc.next();
+                        System.out.println("Invalid option.");
+                    }
+                }
+
                 agents.add(new GameAgent(1));
                 agents.add(new GameAgent(2));
                 break;
             }
         }
+
+        agents.get(0).setOpponent(agents.get(1));
+        agents.get(1).setOpponent(agents.get(0));
+
+        Simulator.agents = Collections.unmodifiableList(agents);
 
         for (int i = 0; i < 2; i++) {
 
@@ -166,12 +191,9 @@ public class Simulator {
 
     private static void displayWorldState() {
 
-       /* System.out.println("Graph SearchState:");
-        System.out.println("----------------");
-        graph.displayGraphState();*/
+//        System.out.println("----------------");
+//        graph.displayGraphState();
 
-        System.out.println("Agents SearchState:");
-        System.out.println("----------------");
 
         for (Agent agent : agents) {
             System.out.println("Agent " + agent.getAgentNum() + ":");
@@ -192,7 +214,11 @@ public class Simulator {
     }
 
     static List<Agent> getAgents() {
-        return Collections.unmodifiableList(agents);
+        return agents;
+    }
+
+    static int getCutoffLimit() {
+        return cutoffLimit;
     }
 
     static int getDeadline() {
@@ -203,7 +229,7 @@ public class Simulator {
         Simulator.deadline = deadline;
     }
 
-    static float getKFactor() {
+    private static float getKFactor() {
         return kFactor;
     }
 
@@ -221,6 +247,23 @@ public class Simulator {
 
     static int getTotalPeople() {
         return totalPeople;
+    }
+
+    static double getTime() {
+        return time;
+    }
+
+    static double computeTraverseTime(int carrying, int weight){
+
+        return (carrying * getKFactor() + 1) * weight;
+    }
+
+    static void addToPeopleMap(int key, int value) {
+        peopleMap.put(key,value);
+    }
+
+    static HashMap<Integer, Integer> getPeopleMapCopy() {
+        return new HashMap<>(peopleMap);
     }
 
     static void increaseTotalPeople(int people) {
