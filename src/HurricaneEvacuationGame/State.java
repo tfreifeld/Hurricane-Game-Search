@@ -49,7 +49,7 @@ class State {
         this.opSaved = parent.getMySaved();
         initActions(this.myLocation);
 
-        this.myCarryCount = parent.getOpponentCarryCount();
+        this.myCarryCount = parent.getOpCarryCount();
         this.opponentCarryCount = parent.getMyCarryCount();
 
         this.timeElapsed = parent.getTimeElapsed() +
@@ -57,7 +57,7 @@ class State {
                         edgeTraversed.getWeight());
 
 
-        this.peopleMap = parent.getPeopleMap();
+        this.peopleMap = new HashMap<>(parent.getPeopleMap());
         if (this.peopleMap.containsKey(opLocation.getId()) &&
                 this.peopleMap.get(opLocation.getId()) != 0) {
             this.opponentCarryCount += opLocation.getPersons();
@@ -95,11 +95,11 @@ class State {
         return opLocation;
     }
 
-    private int getMyCarryCount() {
+    int getMyCarryCount() {
         return myCarryCount;
     }
 
-    private int getOpponentCarryCount() {
+    int getOpCarryCount() {
         return opponentCarryCount;
     }
 
