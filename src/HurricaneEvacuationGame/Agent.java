@@ -8,9 +8,8 @@ abstract class Agent {
     private int carrying = 0;
     private int numOfMoves = 0;
     private int saved = 0;
-    private int numOfExpansions = -1;
 
-    public Agent(int agentNum) {
+    Agent(int agentNum) {
         this.agentNum = agentNum;
     }
 
@@ -20,7 +19,7 @@ abstract class Agent {
         this.opponent = opponent;
     }
 
-    void setLocation(Vertex location) {
+    private void setLocation(Vertex location) {
         this.location = location;
     }
 
@@ -34,6 +33,7 @@ abstract class Agent {
         } else {
             setCarrying(getCarrying() + target.getPersons());
             target.setPersons(0);
+            Simulator.getPeopleMap().replace(target.getId(), 0);
         }
 
     }
@@ -69,14 +69,6 @@ abstract class Agent {
 
     int getSaved() {
         return saved;
-    }
-
-    int getNumOfExpansions() {
-        return numOfExpansions;
-    }
-
-    void setNumOfExpansions(int numOfExpansions) {
-        this.numOfExpansions = numOfExpansions;
     }
 
     void performanceMeasure(){

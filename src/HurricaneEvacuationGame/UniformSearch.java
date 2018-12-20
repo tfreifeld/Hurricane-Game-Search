@@ -1,31 +1,82 @@
 package HurricaneEvacuationGame;
 
+import java.util.*;
 import java.util.function.Predicate;
 
-class UniformSearch extends Search {
+class UniformSearch {
 
-    UniformSearch(Vertex location, Predicate<Node> goalTest, Agent agent) {
-        super(goalTest, agent);
+    private PriorityQueue<Node> fringe;
+    private Predicate<Node> goalTest;
+
+    UniformSearch(Vertex location, Predicate<Node> goalTest) {
+        this.fringe = new PriorityQueue<>();
+        this.goalTest = goalTest;
         this.fringe.add(new UniformSearchNode(location));
     }
 
-    @Override
-    Node createChildNode(Edge edge, Node currentNode) {
+    Node run() {
+
+        while (true) {
+
+            if (fringe.isEmpty()) {
+
+                return null;
+            }
+
+            Node currentNode = fringe.poll();
+
+            if (checkReturnCondition(currentNode)) return currentNode;
+
+            for (Edge nextEdge : currentNode.getState().getLocation().getEdges().values()) {
+
+                if (nextEdge.isBlocked()) {
+                    continue;
+                }
+
+                Node child = createChildNode(nextEdge, currentNode);
+
+                boolean inFringe = false;
+
+                for (Node node : fringe) {
+
+                    if (node.getState().equals(child.state)) {
+
+                        inFringe = true;
+
+                        if (node.compareTo(child) > 0) {
+                            fringe.remove(node);
+                            fringe.add(child);
+                            break;
+                        }
+                    }
+                }
+                if (!inFringe) {
+                        fringe.add(child);
+                    }
+                }
+            }
+        }
+
+    private boolean checkReturnCondition(Node currentNode) {
+        return goalTest.test(currentNode);
+    }
+
+    private Node createChildNode(Edge edge, Node currentNode) {
         return new UniformSearchNode(edge.getNeighbour
                 (currentNode.getState().getLocation()), (UniformSearchNode) currentNode, edge);
     }
 
-    static private class UniformSearchNode extends Node {
+    protected static class UniformSearchNode extends Node {
 
         UniformSearchNode(Vertex location) {
             super();
-            this.state = new SearchState(null, location, -1);
+            this.state = new SearchState(location);
         }
 
         UniformSearchNode(Vertex location, UniformSearchNode parent, Edge edge) {
             super(parent);
             this.pathCost = parent.getPathCost() + edge.getWeight();
-            this.state = new SearchState(null, location, -1);
+            this.state = new SearchState(location);
 
         }
 
@@ -44,3 +95,66 @@ class UniformSearch extends Search {
         }
     }
 }
+
+abstract class Node implements Comparable<Node> {
+
+    float pathCost;
+    private Node parent;
+    private ArrayList<Node> children;
+    SearchState state;
+
+
+    Node() {
+
+        this.pathCost = 0;
+        this.children = new ArrayList<>();
+        this.parent = null;
+    }
+
+    Node(Node parent) {
+        this.parent = parent;
+        this.parent.getChildren().add(this);
+        this.children = new ArrayList<>();
+
+    }
+
+    float getPathCost() {
+        return pathCost;
+    }
+
+    private ArrayList<Node> getChildren() {
+        return children;
+    }
+
+    SearchState getState() {
+        return state;
+    }
+
+    @Override
+    abstract public int compareTo(Node o);
+}
+
+class SearchState {
+
+    final private Vertex location;
+
+    SearchState(Vertex location) {
+        this.location = location;
+    }
+
+    Vertex getLocation() {
+        return location;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof SearchState)) {
+            return false;
+        } else {
+            return (this.getLocation().equals(((SearchState) obj).getLocation()));
+
+        }
+    }
+
+}
+

@@ -8,7 +8,6 @@ class Vertex {
     private int persons;
     private boolean shelter;
     private HashMap<Integer,Edge> edges;
-    private ArrayList<OnPeopleChangeListener> mListeners;
     private HashMap<Integer,Double> lengthsToPeople;
     private double lengthToClosestShelter;
 
@@ -17,7 +16,6 @@ class Vertex {
         this.persons = 0;
         this.shelter = false;
         this.edges = new HashMap<>();
-        this.mListeners = new ArrayList<>();
         this.lengthsToPeople = new HashMap<>();
         this.lengthToClosestShelter = Double.POSITIVE_INFINITY;
 
@@ -31,11 +29,7 @@ class Vertex {
 
     void setPersons(int persons) {
         this.persons = persons;
-        if(persons == 0){
-            for (OnPeopleChangeListener listener:mListeners) {
-                listener.onPeopleChange();
-            }
-        }
+
     }
 
     void setShelter() {
@@ -102,12 +96,12 @@ class Vertex {
         for (Map.Entry<Integer, Integer> next : peopleMap.entrySet()) {
             int targetVertex = next.getKey();
             double length = new UniformSearch(this,
-                    node -> node.getState().getLocation().getId() == targetVertex, null)
+                    node -> node.getState().getLocation().getId() == targetVertex)
                     .run().getPathCost();
             lengthsToPeople.put(targetVertex, length);
         }
         this.lengthToClosestShelter = new UniformSearch(
-                this, node -> node.getState().getLocation().isShelter(), null)
+                this, node -> node.getState().getLocation().isShelter())
                 .run().getPathCost();
 
     }
@@ -118,11 +112,6 @@ class Vertex {
 
     HashMap<Integer, Double> getLengthsToPeople() {
         return lengthsToPeople;
-    }
-
-    void registerListener(OnPeopleChangeListener listener){
-
-        this.mListeners.add(listener);
     }
 
     @Override
@@ -136,8 +125,3 @@ class Vertex {
 
 }
 
-interface OnPeopleChangeListener{
-
-    void onPeopleChange();
-
-}

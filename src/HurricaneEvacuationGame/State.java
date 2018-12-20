@@ -8,7 +8,7 @@ import java.util.Set;
 class State {
 
     private int counter;
-
+    private final State parent;
     private Agent agent;
     private Agent opponent;
     private Vertex myLocation;
@@ -24,6 +24,7 @@ class State {
 
     State(Agent agent) {
         this.counter = 0;
+        this.parent = null;
         this.agent = agent;
         this.opponent = agent.getOpponent();
         this.myLocation = agent.getLocation();
@@ -41,6 +42,7 @@ class State {
                   Vertex opLocation, State parent) {
 
         this.counter = parent.getCounter() + 1;
+        this.parent = parent;
         this.agent = agent;
         this.opponent = agent.getOpponent();
         this.myLocation = myLocation;
@@ -52,9 +54,16 @@ class State {
         this.myCarryCount = parent.getOpCarryCount();
         this.opponentCarryCount = parent.getMyCarryCount();
 
-        this.timeElapsed = parent.getTimeElapsed() +
-                Simulator.computeTraverseTime(opponentCarryCount,
-                        edgeTraversed.getWeight());
+        if (edgeTraversed != null) {
+
+            this.timeElapsed = parent.getTimeElapsed() +
+                    Simulator.computeTraverseTime(opponentCarryCount,
+                            edgeTraversed.getWeight());
+        }
+        else{
+            /*NoOp*/
+            this.timeElapsed = parent.getTimeElapsed() + 1;
+        }
 
 
         this.peopleMap = new HashMap<>(parent.getPeopleMap());
@@ -72,7 +81,6 @@ class State {
     }
 
 
-
     private void initActions(Vertex myLocation) {
         this.actions = new HashSet<>();
 
@@ -81,10 +89,15 @@ class State {
                     .getNeighbour(myLocation), entry.getValue()));
 
         }
+        actions.add(new Move(this.agent, this.agent.getLocation(), null));
     }
 
-    int getCounter() {
+    private int getCounter() {
         return counter;
+    }
+
+    State getParent() {
+        return parent;
     }
 
     Vertex getMyLocation() {
@@ -111,7 +124,7 @@ class State {
         return actions;
     }
 
-    public Agent getAgent() {
+    Agent getAgent() {
         return agent;
     }
 
@@ -132,5 +145,11 @@ class State {
 
         return new State(this.opponent, action.getEdge(),
                 opLocation, action.getTarget(), this);
+    }
+
+    boolean isTerminal() {
+
+        return (getTimeElapsed() > Simulator.getDeadline()) ||
+                (getCounter() == Simulator.getCutoffLimit());
     }
 }

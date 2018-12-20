@@ -5,9 +5,9 @@ import java.util.Map;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 
-class GameAgent extends Agent {
+class AdversarialAgent extends Agent {
 
-    GameAgent(int agentNum) {
+    AdversarialAgent(int agentNum) {
         super(agentNum);
     }
 
@@ -35,16 +35,29 @@ class GameAgent extends Agent {
 
         for (Move action : state.getActions()) {
             int actionResult = funcValue.apply(state.getResult(action));
-            System.out.println("target = " + action.getTarget().getId()  +
+
+             System.out.println("target = " + action.getTarget().getId() +
                     ", result =  " + actionResult);
+
             if (compare.test(actionResult, result)) {
                 result = actionResult;
                 bestMove = action;
             }
-            /* Between moves with equal utility, choose randomly */
-            else if (actionResult == result){
-                if(Math.random() > 0.5){
-                    bestMove = action;
+
+            /* Between moves with equal utility choose the
+             * least time consuming, or if agent carries,
+             * choose least time consuming shelter */
+            else if (actionResult == result) {
+                if (getCarrying() > 0) {
+                    if (action.getTarget().isShelter())
+                        if (bestMove.getTarget().isShelter()) {
+                            bestMove = breakTie(bestMove, action);
+                        } else {
+                            bestMove = action;
+                        }
+                }
+                else {
+                    bestMove = breakTie(bestMove, action);
                 }
             }
         }
@@ -53,9 +66,34 @@ class GameAgent extends Agent {
 
     }
 
+    private Move breakTie(Move bestMove, Move action) {
+
+        if (bestMove.getEdge() == null && action.getEdge() == null){
+            return bestMove;
+        }
+        else if (bestMove.getEdge() == null){
+            return action;
+        }
+        else if (action.getEdge() == null){
+            return bestMove;
+        }
+        else {
+            double bestMoveTraverseTime =
+                    Simulator.computeTraverseTime
+                            (getCarrying(), bestMove.getEdge().getWeight());
+            double actionTraverseTime =
+                    Simulator.computeTraverseTime
+                            (getCarrying(), action.getEdge().getWeight());
+            if (actionTraverseTime < bestMoveTraverseTime) {
+                bestMove = action;
+            }
+            return bestMove;
+        }
+    }
+
     private int minValue(State state, int alpha, int beta) {
-        if (isTerminal(state))
-            return evalUtility(state);
+        if (state.isTerminal())
+            return evalUtility(state.getParent());
         else {
             int value = Integer.MAX_VALUE;
             for (Move action : state.getActions()) {
@@ -70,12 +108,12 @@ class GameAgent extends Agent {
 
     private int maxValue(State state, int alpha, int beta) {
 
-        if (isTerminal(state))
-            return evalUtility(state);
+        if (state.isTerminal())
+            return evalUtility(state.getParent());
         else {
             int value = Integer.MIN_VALUE;
             for (Move action : state.getActions()) {
-                value = Math.max(value, minValue(state.getResult(action),alpha , beta));
+                value = Math.max(value, minValue(state.getResult(action), alpha, beta));
                 if (value >= beta)
                     return value;
                 alpha = Math.max(alpha, value);
@@ -84,27 +122,19 @@ class GameAgent extends Agent {
         }
     }
 
-    private boolean isTerminal(State state) {
-
-        return (state.getTimeElapsed() >= Simulator.getDeadline()) ||
-                (state.getCounter() == Simulator.getCutoffLimit());
-    }
-
-    private int evalUtility(State state) {
-
+    private static int evalUtility(State state) {
 
 
         int agentOneSaved, agentTwoSaved, agentOneCarry, agentTwoCarry;
         Vertex agentOneLocation, agentTwoLocation;
-        if(state.getAgent().getAgentNum() == 1){
+        if (state.getAgent().getAgentNum() == 1) {
             agentOneSaved = state.getMySaved();
             agentTwoSaved = state.getOpSaved();
             agentOneCarry = state.getMyCarryCount();
             agentTwoCarry = state.getOpCarryCount();
             agentOneLocation = state.getMyLocation();
             agentTwoLocation = state.getOpLocation();
-        }
-        else{
+        } else {
             agentOneSaved = state.getOpSaved();
             agentTwoSaved = state.getMySaved();
             agentOneCarry = state.getOpCarryCount();
@@ -113,7 +143,7 @@ class GameAgent extends Agent {
             agentTwoLocation = state.getMyLocation();
         }
 
-        int result = 100 * (agentOneSaved - agentTwoSaved) + 50 *(agentOneCarry - agentTwoCarry);
+        int result = 1000 * (agentOneSaved - agentTwoSaved) + 50 * (agentOneCarry - agentTwoCarry);
 
 
         HashMap<Integer, Double> agentOneLengthsToPeople = agentOneLocation.getLengthsToPeople();
@@ -127,13 +157,11 @@ class GameAgent extends Agent {
 
                 if (agentOneLengthToPeople < agentTwoLengthToPeople) {
                     result += entry.getValue();
-                }
-                else if (agentOneLengthToPeople > agentTwoLengthToPeople){
+                } else if (agentOneLengthToPeople > agentTwoLengthToPeople) {
                     result -= entry.getValue();
                 }
             }
         }
-
 
 
         return result;

@@ -74,7 +74,7 @@ public class Simulator {
                         + " to " + move.getTarget().getId());
                 move.getAgent().traverse(move.getTarget());
                 time = tempTime;
-                peopleMap.replace(move.getTarget().getId(), 0);
+
             } else {
                 System.out.println("traverse failed - will breach deadline");
                 /*If deadline is breached, traverse fails*/
@@ -118,6 +118,26 @@ public class Simulator {
                     gameType = sc.next();
                 }
 
+                switch (gameType){
+
+                    case "a":{
+                        agents.add(new AdversarialAgent(1));
+                        agents.add(new AdversarialAgent(2));
+                        break;
+                    }
+                    case "s":{
+                        agents.add(new SemiCooperativeAgent(1));
+                        agents.add(new SemiCooperativeAgent(2));
+                        break;
+                    }
+                    case "f":{
+                        agents.add(new CooperativeAgent(1));
+                        agents.add(new CooperativeAgent(2));
+                        break;
+                    }
+                }
+
+
                 System.out.println("Please choose a cutoff limit for the tree:");
                 while (true) {
                     try {
@@ -132,9 +152,6 @@ public class Simulator {
                         System.out.println("Invalid option.");
                     }
                 }
-
-                agents.add(new GameAgent(1));
-                agents.add(new GameAgent(2));
                 break;
             }
         }
@@ -213,10 +230,6 @@ public class Simulator {
 
     }
 
-    static List<Agent> getAgents() {
-        return agents;
-    }
-
     static int getCutoffLimit() {
         return cutoffLimit;
     }
@@ -229,7 +242,7 @@ public class Simulator {
         Simulator.deadline = deadline;
     }
 
-    private static float getKFactor() {
+    static float getKFactor() {
         return kFactor;
     }
 
@@ -260,6 +273,10 @@ public class Simulator {
 
     static void addToPeopleMap(int key, int value) {
         peopleMap.put(key,value);
+    }
+
+    static HashMap<Integer, Integer> getPeopleMap() {
+        return peopleMap;
     }
 
     static HashMap<Integer, Integer> getPeopleMapCopy() {
