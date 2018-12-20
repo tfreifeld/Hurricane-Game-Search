@@ -1,10 +1,6 @@
-# Hurricane-Evac-Simulator
+# Hurricane-Game-Search
 
 An assigmnet I made for an intro course on Artificial Intelligence. 
 The program simulates agents(evac vehicles) working in a hurricane scenario,
-and trying to evcuate to saftey as much people as possible.
-The agents use several search algorithms: 
-- Uniform-Cost Search (Dijkstra)
-- Greedy Best-First Search
-- A* Search
-- A simplified version of Real-Time A* search
+and trying to evcuate to saftey as much people as possible, in adversarial, semi-cooperative and cooperative game scenarios. 
+The program implements the minimax algoirthm (in adversarial search) and use heuristic evaluation functions.
